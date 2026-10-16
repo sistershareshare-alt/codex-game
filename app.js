@@ -8,23 +8,23 @@ const scenery=document.createElement('canvas');scenery.width=900;scenery.height=
 function rounded(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=2;c.stroke();}}
 function ellipse(c,x,y,rx,ry,fill){c.beginPath();c.ellipse(x,y,rx,ry,0,0,7);c.fillStyle=fill;c.fill();}
 function flower(c,x,y,r){for(let i=0;i<5;i++){let a=i*Math.PI*2/5;ellipse(c,x+Math.cos(a)*r*.7,y+Math.sin(a)*r*.7,r*.55,r*.55,'#fff9d9');}ellipse(c,x,y,r*.36,r*.36,'#e6b644');}
-function leaf(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);ellipse(c,0,0,5,2.5,'#9ab559');c.restore();}
+function leaf(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);ellipse(c,0,0,5,2.5,'#83cb62');c.restore();}
 {
-const c=scenery.getContext('2d');c.fillStyle='#e3cf9f';c.fillRect(0,0,900,780);
+const c=scenery.getContext('2d');c.fillStyle='#fff1b8';c.fillRect(0,0,900,780);
 for(let y=0;y<grid.length;y++)for(let x=0;x<grid[y].length;x++){let px=x*60,py=y*60;
 if(grid[y][x]==='#'){
-rounded(c,px+1,py+8,58,51,9,'#203f42');
-const grad=c.createLinearGradient(px,py,px,py+48);grad.addColorStop(0,'#8da470');grad.addColorStop(.24,'#648255');grad.addColorStop(1,'#3c604d');
-rounded(c,px+2,py+1,56,49,8,grad,'#294d48');rounded(c,px+7,py+4,46,5,2,'#91b59a');
+rounded(c,px+1,py+8,58,51,9,'#3f9d86');
+const grad=c.createLinearGradient(px,py,px,py+48);grad.addColorStop(0,'#c1f08f');grad.addColorStop(.24,'#87d87c');grad.addColorStop(1,'#54b99a');
+rounded(c,px+2,py+1,56,49,8,grad,'#419d83');rounded(c,px+7,py+4,46,5,2,'#e4ffc4');
 c.strokeStyle='#ffffff12';c.beginPath();c.moveTo(px+9,py+25);c.lineTo(px+50,py+25);c.moveTo(px+30,py+10);c.lineTo(px+30,py+24);c.stroke();
 // Seeded flecks, soft moss and flowers make each hand-drawn stone different.
-for(let j=0;j<7;j++){let nx=8+(x*17+y*29+j*13)%43,ny=10+(x*11+y*7+j*19)%32;ellipse(c,px+nx,py+ny,3+(j%3),2,'#d4dfaa18');}
-if((x*7+y*3)%4===0){ellipse(c,px+15,py+35,11,6,'#789550');ellipse(c,px+23,py+30,8,5,'#94ad61');ellipse(c,px+10,py+27,5,4,'#adbd70');}
+for(let j=0;j<7;j++){let nx=8+(x*17+y*29+j*13)%43,ny=10+(x*11+y*7+j*19)%32;ellipse(c,px+nx,py+ny,3+(j%3),2,'#f4ffd23c');}
+if((x*7+y*3)%4===0){ellipse(c,px+15,py+35,11,6,'#a8d850');ellipse(c,px+23,py+30,8,5,'#bee56b');ellipse(c,px+10,py+27,5,4,'#e2f4a2');}
 if((x*3+y*5)%9===0){flower(c,px+40,py+16,5);flower(c,px+30,py+12,3);}
-if((x+y*3)%7===0){c.strokeStyle='#3d6344';c.lineWidth=2;c.beginPath();c.moveTo(px+7,py+3);c.quadraticCurveTo(px+20,py+20,px+8,py+43);c.stroke();leaf(c,px+12,py+15,.3);leaf(c,px+10,py+32,-.7);}
+if((x+y*3)%7===0){c.strokeStyle='#65af65';c.lineWidth=2;c.beginPath();c.moveTo(px+7,py+3);c.quadraticCurveTo(px+20,py+20,px+8,py+43);c.stroke();leaf(c,px+12,py+15,.3);leaf(c,px+10,py+32,-.7);}
 }else{
-rounded(c,px+2,py+2,56,56,5,(x+y)%2?'#eddcb3':'#e6d2a4');
-c.fillStyle='#c5ad7e';if((x+y)%4===0){c.fillRect(px+14,py+16,3,3);c.fillRect(px+40,py+44,2,2);c.strokeStyle='#c4b18570';c.lineWidth=1;c.beginPath();c.moveTo(px+3,py+39);c.lineTo(px+11,py+34);c.lineTo(px+13,py+26);c.stroke();}
+rounded(c,px+2,py+2,56,56,5,(x+y)%2?'#fff6d5':'#ffedbd');
+c.fillStyle='#e8ca8f';if((x+y)%4===0){c.fillRect(px+14,py+16,3,3);c.fillRect(px+40,py+44,2,2);c.strokeStyle='#d8b16c45';c.lineWidth=1;c.beginPath();c.moveTo(px+3,py+39);c.lineTo(px+11,py+34);c.lineTo(px+13,py+26);c.stroke();}
 if((x*11+y*3)%13===0){leaf(c,px+48,py+49,.4);leaf(c,px+42,py+48,-.8);}
 }
 }}
@@ -43,7 +43,7 @@ function heroSprite(p,t){if(paintedCharacter(p,t,0))return;let x=p.x*60+30,y=p.y
 // Blue explorer cape, boots and face, with solid outlines for small screens.
 rounded(g,-18,-3,36,30,11,'#207bbb','#fff8de');g.shadowBlur=0;rounded(g,-14,18,11,10,4,'#24485b');rounded(g,4,18,11,10,4,'#24485b');ellipse(g,-19,6,5,7,'#ffe2ac');ellipse(g,19,6,5,7,'#ffe2ac');ellipse(g,0,-8,17,17,'#ffdda7');ellipse(g,-7,-8,4.5,6,'#3d2c25');ellipse(g,7,-8,4.5,6,'#3d2c25');ellipse(g,-8,-10,1.8,2,'#fffdf1');ellipse(g,6,-10,1.8,2,'#fffdf1');ellipse(g,-12,0,4,2.5,'#eea188');ellipse(g,12,0,4,2.5,'#eea188');g.strokeStyle='#ae704b';g.lineWidth=2;g.beginPath();g.arc(0,-1,5,.2,2.9);g.stroke();rounded(g,-17,-30,34,17,9,'#f7b94c','#80572d');ellipse(g,0,-15,24,5,'#ffe297');rounded(g,-11,-25,22,5,2,'#c7832d');rounded(g,-7,2,14,7,2,'#fff2c0');if(t<invincible){g.strokeStyle='#49cfff';g.lineWidth=3;g.beginPath();g.arc(0,0,28,0,7);g.stroke();}g.restore();}
 function robotSprite(p,t){if(paintedCharacter(p,t,1))return;g.save();g.translate(p.x*60+30,p.y*60+30);ellipse(g,0,22,24,8,'#67413845');rounded(g,-15,16,11,12,4,'#693f4b');rounded(g,4,16,11,12,4,'#693f4b');rounded(g,-22,-16,44,38,11,'#d94c5e','#fff3df');rounded(g,-17,-19,34,8,4,'#ff9c8b');rounded(g,-16,-8,32,17,5,'#4d2b42');g.shadowColor='#ffb661';g.shadowBlur=8;rounded(g,-11,-3,8,5,2,'#ffe18a');rounded(g,4,-3,8,5,2,'#ffe18a');g.shadowBlur=0;rounded(g,-7,13,14,3,1,'#ffb8a2');g.strokeStyle='#673447';g.lineWidth=3;g.beginPath();g.moveTo(0,-18);g.lineTo(0,-28);g.stroke();ellipse(g,0,-29,5,5,'#ffe588');g.restore();}
-function exitSprite(){let x=exit.x*60+30,y=exit.y*60+30;g.save();g.translate(x,y);rounded(g,-26,-28,52,56,12,'#614b3d','#fff0b5');rounded(g,-20,-22,40,48,9,doorOpen(keys)?'#65edca':'#a97c43');rounded(g,-15,-17,30,40,7,doorOpen(keys)?'#c1ffe0':'#78582f');g.font='bold 23px system-ui';g.textAlign='center';g.fillStyle=doorOpen(keys)?'#20705d':'#ffdd7d';g.fillText(doorOpen(keys)?'↑':'锁',0,6);g.fillStyle='#fff8d5';g.font='bold 9px system-ui';g.fillText('出口',0,-32);g.restore();}
+function exitSprite(){let x=exit.x*60+30,y=exit.y*60+30;g.save();g.translate(x,y);rounded(g,-26,-28,52,56,12,'#e9a067','#fff0b5');rounded(g,-20,-22,40,48,9,doorOpen(keys)?'#65edca':'#ffc36e');rounded(g,-15,-17,30,40,7,doorOpen(keys)?'#c1ffe0':'#ffdc95');g.font='bold 23px system-ui';g.textAlign='center';g.fillStyle=doorOpen(keys)?'#20705d':'#a66e2a';g.fillText(doorOpen(keys)?'↑':'锁',0,6);g.fillStyle='#fff8d5';g.font='bold 9px system-ui';g.fillText('出口',0,-32);g.restore();}
 function draw(t){g.clearRect(0,0,900,780);g.drawImage(scenery,0,0);exitSprite();keySites.forEach((k,i)=>{if(!keys.has(i))keySprite(k,i,t);});
 let distance=route(enemy,player).length;document.body.classList.toggle('urgent',state==='running'&&distance<6);$('danger').textContent=state==='running'?(distance<6?'⚠ 它靠近了！快转弯！':'👣 机器人正在追踪…'):'写字和暂停时，机器人不会移动';
 robotSprite(enemy,t);heroSprite(player,t);for(const p of particles){let age=(t-p.t)/900;if(age<1){g.globalAlpha=1-age;g.fillStyle='#fff3b0';g.beginPath();g.arc(p.x+p.vx*age,p.y+p.vy*age,5*(1-age),0,7);g.fill();}}g.globalAlpha=1;particles=particles.filter(p=>t-p.t<900);}
