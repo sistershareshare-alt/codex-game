@@ -43,8 +43,8 @@ npm run build
 
 笔画中线来自 [Hanzi Writer Data](https://github.com/chanind/hanzi-writer-data) / [Make Me a Hanzi](https://github.com/skishore/makemeahanzi)，Copyright (C) 1999 Arphic Technology Co., Ltd.，按 Arphic Public License 发布。应用将坐标转换为 360px 画板尺寸，原许可完整保留于 `licenses/ARPHICPL.TXT`，网站「怎么玩」内也可查看。该许可适用于衍生笔画数据，不改变独立应用代码的许可。拼音生成使用 pinyin-pro（MIT），许可见 `licenses/pinyin-pro-LICENSE`。
 
-## 全界面楷体
+## 全界面方正楷体
 
-界面文字、按钮、课次选项、拼音、田字格参考字及画布内标签统一使用内嵌的霞鹜文楷网页字体，未安装楷体的设备也能显示。`assets/game-kaiti.woff` 约 222 KiB，覆盖当前全部 500 个生字、界面中文、拉丁字母与拼音符号；Emoji 图标由系统绘制。
+使用项目负责人提供的「方正楷体简体.ttf」（内部字体名 FZKai-Z03S），覆盖界面、按钮、拼音、田字格参考字和画布标签。网页内嵌 `assets/game-fangzheng-kaiti.woff`，无需设备安装字体。Emoji 图标由系统绘制。
 
-字体来自 LXGW WenKai，上游固定版本 `a06dd23142e82758f23f792f4060bbf1613286e8`；原许可保留在 `licenses/WenKai-OFL.txt`、网站许可面板和字体元数据中。仅为网页交付提取字符并转为 WOFF，不提供修改后的桌面安装字体。若新增字库或界面文字，可下载该版本的 `fonts/TTF/LXGWWenKai-Regular.ttf`，安装 Python fonttools 后运行 `python3 scripts/subset-kaiti.py /path/to/LXGWWenKai-Regular.ttf` 并重新构建。
+子集覆盖全部 500 个生字、当前界面中文、拉丁字母与带调拼音。字体原始名称和版权元数据保留，来源与原文件摘要见 `licenses/Founder-font-NOTICE.txt`。新增字库或界面文字后，使用获准使用的原字体运行 `python3 scripts/subset-kaiti.py /path/to/方正楷体简体.ttf` 再构建；此可选步骤需要 Python fonttools。

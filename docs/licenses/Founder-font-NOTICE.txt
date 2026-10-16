@@ -1,0 +1,10 @@
+方正楷体简体 / FZKai-Z03S
+Copyright(c) Founder Corporation.2000
+
+Source: 方正楷体简体.ttf, supplied by the project owner for this game.
+Original PostScript name: FZKTJW--GB1-0
+Source SHA-256: 4f0619ab20c955ef443163b69070d8c0263adfa701ec4d2dc83ff2775506fcc5
+
+This web font is a glyph subset of the supplied font, converted to WOFF.
+Original naming and copyright metadata are retained. No open-source font
+license is claimed or granted by this project for this font.

@@ -72,8 +72,10 @@ body{background-image:url('/assets/garden-background.png')}
 @media(max-height:500px) and (orientation:landscape){.intro{display:flex;min-height:28px;padding:2px 8px;margin-bottom:5px}.intro h1{font-size:12px}.intro>div>.eyebrow,.intro>div>p{display:none}.course-picker{min-width:0;padding:0}.course-picker label,.course-picker span{display:none}.course-picker select{padding:2px 8px;font-size:9px}#writing .tools button{font-size:9px;padding:6px}.tools{gap:4px}}
 
 /* Embedded Kai font covers the teacher bank, UI, pinyin and numerals on every device. */
-@font-face{font-family:GameKai;src:url('/assets/game-kaiti.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
-:root{--game-font:GameKai,KaiTi,STKaiti,"Kaiti SC","楷体",serif}
+@font-face{font-family:GameFounderKai;src:url('/assets/game-fangzheng-kaiti.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
+:root{--game-font:GameFounderKai,KaiTi,STKaiti,"Kaiti SC","楷体",serif}
 html,body,button,input,select,option,textarea,pre,code,#ghost{font-family:var(--game-font)}
 
 .credits pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:9px;color:#8a7758}
+/* Keep the low direction pad and headings inside their panel with this font's metrics. */
+@media(min-width:761px) and (max-height:850px){.controls>p:not(.keyboard){display:none}}
