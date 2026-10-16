@@ -70,3 +70,10 @@ body{background-image:url('/assets/garden-background.png')}
 @media(max-width:760px) and (orientation:portrait){.intro{gap:8px;min-height:45px;padding:4px 7px}.intro h1{font-size:13px;max-width:150px}.course-picker{min-width:0;max-width:170px;flex:1}.course-picker label{display:none}.course-picker select{font-size:9px;padding:4px 5px;max-width:100%}.course-picker span{font-size:8px}.tools{gap:4px}.tools button{padding:7px 7px}}
 @media(max-height:700px) and (min-width:761px){.course-picker{flex-direction:row;align-items:center;gap:7px}.course-picker label,.course-picker span{display:none}}
 @media(max-height:500px) and (orientation:landscape){.intro{display:flex;min-height:28px;padding:2px 8px;margin-bottom:5px}.intro h1{font-size:12px}.intro>div>.eyebrow,.intro>div>p{display:none}.course-picker{min-width:0;padding:0}.course-picker label,.course-picker span{display:none}.course-picker select{padding:2px 8px;font-size:9px}#writing .tools button{font-size:9px;padding:6px}.tools{gap:4px}}
+
+/* Embedded Kai font covers the teacher bank, UI, pinyin and numerals on every device. */
+@font-face{font-family:GameKai;src:url('/assets/game-kaiti.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
+:root{--game-font:GameKai,KaiTi,STKaiti,"Kaiti SC","楷体",serif}
+html,body,button,input,select,option,textarea,pre,code,#ghost{font-family:var(--game-font)}
+
+.credits pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:9px;color:#8a7758}
