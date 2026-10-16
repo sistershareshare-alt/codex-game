@@ -1,0 +1,12 @@
+{
+  "name": "hanzi-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.cjs",
+    "start": "node server.cjs",
+    "test": "node --test",
+    "build": "node build-standalone.cjs"
+  },
+  "type": "module"
+}
