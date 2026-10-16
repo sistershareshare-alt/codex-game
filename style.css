@@ -62,3 +62,7 @@ dialog .primary{background:linear-gradient(#ffc7bd,#ffa7a4);border-color:#ffe1c6
 /* Direct image URLs avoid browser size limits on CSS custom-property values in the self-contained build. */
 body{background-image:url('/assets/garden-background.png')}
 .board-wrap{background:linear-gradient(#fffdeb08,#fffdeb08),url('/assets/garden-background.png') center/cover}
+/* Anchor the writing sheet near the lower edge so children can reach it. */
+#writing{position:fixed;top:auto;bottom:max(12px,env(safe-area-inset-bottom));margin:0 auto;max-height:calc(100dvh - 24px)}
+#writing .paper{width:min(230px,calc(100dvh - 405px));aspect-ratio:1}
+@media(max-height:500px) and (orientation:landscape){#writing{bottom:max(6px,env(safe-area-inset-bottom));max-height:calc(100dvh - 12px)}#writing .paper{width:min(230px,calc(100dvh - 90px));align-self:end}}
