@@ -1,47 +1,44 @@
-# 汉字迷宫 · 钥匙大逃脱
+# 汉字迷宫 · 彩虹花园
 
-一年级华语听写与迷宫追逐游戏。操控角色躲开机器人，到五个钥匙站听音写字（一、二、三、十、人），写对获得钥匙，集齐后前往右上角出口。
+小学一年级华语听写与迷宫追逐游戏。操控探险家躲开机器人，在五个钥匙站听音写字，集齐钥匙后前往右上角出口。
 
-## 启动
+## 教师字库与随机练习
 
-Node.js 18+，无需安装外部依赖。`npm start` 启动默认端口 3000，`PORT` 可修改端口。`npm test` 运行 13 项笔画与迷宫逻辑测试。
+- `curriculum.js` 保存教师提供的 19 组生字，保留课次与原始顺序。原表中排在 1.9 后的第二个「1.1」按顺序记为 1.10。
+- 去重后共 500 个汉字。每局随机抽五个不同的字，不重复上一局的五字；上局字目存在浏览器 localStorage，刷新后也会避开。
+- 顶部可以选择全部生字或指定 1.1–1.19 课。切换正在练习的课次会先暂停并确认重开，取消则恢复原课次。
+- 听题包含示例词语以区分同音字。拼音与示例词语由应用补充，多音字可在 `scripts/generate-word-bank.mjs` 中调整。
+- 每个字均包含 Hanzi Writer Data 的笔画中线模板。可以查看参考字、分笔顺序示范、撤回、重写或由家长确认。
+- 比对笔画数、顺序和形状；模板匹配并非专业手写识别，复杂字或不同写法可能误判，不评判美观。
 
-方向键 / WASD / 手机悬浮方向按钮移动；按住连续移动。空格或暂停按钮暂停。两档追逐速度，每把钥匙使机器人加速。三颗心，被抓返回起点并保留钥匙，短暂无敌；全部用完重新挑战。
+## 运行与开发
 
-写字时追逐暂停。离开钥匙站可稍后返回。字迹通过本地笔画模板比较数量、方向和形状，有可能误判；支持提示、撤回、重写和家长确认，不评判美观。
+需要 Node.js 18+。运行已提交的游戏和测试无需外部服务：
 
-中文朗读使用浏览器 SpeechSynthesis，效果依赖设备中文语音支持。没有声音时可由家长查看提示读题。笔迹不上传，无账号、外部资源或付费项目。每局结束提醒休息。
+```sh
+npm start
+npm test
+```
 
-单文件版本：`/workspace/artifacts/hanzi-maze-escape.html`，可下载后直接用现代浏览器打开，无需启动服务器。
+默认端口 3000，环境变量 `PORT` 可修改。重新生成字库及发布文件需安装锁定的开发依赖：
 
-## 遗迹花园视觉版
+```sh
+npm ci
+npm run build
+```
 
-使用程序绘制的 2D 立体石墙、蓝衣探险家、红色机器人和金色钥匙站，无需图片下载。整局按视口高度布局，地图等比完整显示；电脑侧边操作，手机竖屏底部操作，横屏侧边操作。已检查 1440×900、1366×768、1280×600、1024×768、390×844、375×667、360×640、844×390、667×375 下地图、方向键和默认听写弹窗均不需滚动。
+`npm run generate:bank` 单独生成 `word-bank.js`。生成过程会检查全部生字都有词语和笔画数据。构建将图片、脚本、字库、样式及笔画许可内嵌到 `docs/index.html`，同时输出 `/workspace/artifacts/hanzi-maze-storybook.html` 和 `hanzi-maze-escape.html`。生成文件可独立打开，无需另行下载字库、图片或运行识别服务器。
 
-新版独立网页：`/workspace/artifacts/hanzi-maze-garden.html`。
+## 操作与设备
 
-## 可爱手绘版与低位操作
+方向键 / WASD / 低位触屏方向按钮移动，按住连续走，空格或暂停按钮暂停。两档追逐速度，获得钥匙后机器人加速。三颗心，被抓返回起点并保留钥匙，短暂无敌。书写期间追逐暂停。听写弹窗靠近屏幕底部，田字格保持正方形。
 
-新增生成的手绘花园背景和透明角色素材（`assets/`），包括可爱探险家和红色机器人。方向键移至操作面板底端，手机竖屏按钮至少 46×44 CSS 像素；电脑也可使用实体方向键 / WASD。
+已检查电脑与手机横竖屏共九种尺寸。中文朗读使用浏览器 SpeechSynthesis，需设备支持中文语音；无法朗读时可由家长查看提示读题。字迹不上传，无账号或付费项目。
 
-`npm run build` 将代码、样式和全部图片内嵌到 `/workspace/artifacts/hanzi-maze-storybook.html`，下载这个文件即可离线玩，无需图片网络请求（系统朗读仍取决于设备）。也同时更新 `hanzi-maze-escape.html`。9 种屏幕尺寸检查通过；已验证低位触屏方向键可移动到钥匙站，实际手写解锁后能继续游戏。
+## GitHub Pages
 
-## GitHub Pages 发布
+仓库 Settings → Pages → Deploy from a branch，选择 `main`、`/docs`。修改后运行构建并一并提交 `docs/index.html` 及 `docs/licenses/`。网站默认地址：<https://sistershareshare-alt.github.io/codex-game/>。不自动更改仓库可见性。
 
-运行 `npm run build` 后，完整静态游戏会同时写入 `docs/index.html`，图片、脚本和样式均已内嵌。提交源码变更后，请一并提交更新后的 `docs/index.html`。
+## 数据来源
 
-在仓库 **Settings → Pages → Build and deployment** 中选择：
-
-- Source: **Deploy from a branch**
-- Branch: **main**
-- Folder: **/docs**
-
-点击 Save，等待 GitHub 显示部署完成。默认站点地址为 `https://sistershareshare-alt.github.io/codex-game/`，以 Pages 页面实际提供的地址为准。仓库需满足 GitHub Pages 的套餐和可见性要求；本项目不主动更改仓库可见性。
-
-## 彩虹花园明亮主题
-
-更新为蓝天、彩虹、粉色花朵和鲜绿草地的卡通手绘背景。迷宫墙、地板、开始遮罩和面板统一使用浅亮配色。自包含网页中的大图片直接写入 CSS `url()`，避免浏览器对过长 CSS 自定义属性值的限制导致背景消失。低位方向键和原玩法保留。
-
-## 低位书写
-
-听写弹窗靠近视口下边缘，田字格保持正方形并略缩至最大 230 CSS 像素。常见电脑屏幕的格子位置比居中弹窗低约 70–136 CSS 像素，移动端保持格子与提交按钮一屏可见。自定义生字库待教师提供后接入。
+笔画中线来自 [Hanzi Writer Data](https://github.com/chanind/hanzi-writer-data) / [Make Me a Hanzi](https://github.com/skishore/makemeahanzi)，Copyright (C) 1999 Arphic Technology Co., Ltd.，按 Arphic Public License 发布。应用将坐标转换为 360px 画板尺寸，原许可完整保留于 `licenses/ARPHICPL.TXT`，网站「怎么玩」内也可查看。该许可适用于衍生笔画数据，不改变独立应用代码的许可。拼音生成使用 pinyin-pro（MIT），许可见 `licenses/pinyin-pro-LICENSE`。

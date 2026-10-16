@@ -6,7 +6,12 @@
     "dev": "node server.cjs",
     "start": "node server.cjs",
     "test": "node --test",
-    "build": "node build-standalone.cjs"
+    "build": "npm run generate:bank && node build-standalone.cjs",
+    "generate:bank": "node scripts/generate-word-bank.mjs"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "hanzi-writer-data": "2.0.1",
+    "pinyin-pro": "3.29.5"
+  }
 }
