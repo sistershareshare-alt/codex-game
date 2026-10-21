@@ -15,3 +15,9 @@ test('rejects a tiny hook stub and a hook in the opposite direction',()=>{
  input[1][input[1].length-1]=[pivot[0]-(end[0]-pivot[0]),pivot[1]-(end[1]-pivot[1])];assert.equal(recognize(input,model).ok,false);
 });
 test('small natural coordinate deviations still pass complete writing',()=>{for(const lesson of lessons){const input=lesson.strokes.map((s,k)=>s.map(([x,y],j)=>[x+Math.sin(j+k)*2,y+Math.cos(j-k)*2]));assert.equal(recognize(input,lesson).ok,true,lesson.char);}});
+test('accepts recognizable childlike spacing and proportions without exact tracing',()=>{
+ for(const c of ['我','你','学','字','书','同','包']){
+  const model=char(c);const input=model.strokes.map((s,k)=>s.map(([x,y],j)=>[x*.8+30+Math.sin(k)*15+Math.sin(j)*3,y*1.13-8+Math.cos(k)*12]));
+  const result=recognize(input,model);assert.equal(result.ok,true,c+': '+result.reason);
+ }
+});

@@ -105,12 +105,15 @@ html,body{height:100dvh}body{padding:0 12px}header{flex-shrink:0;height:66px;gap
 #writing.choosing #writing-title,#writing.choosing .paper,#writing.choosing .answer-actions,#writing.choosing #feedback{display:none!important}#writing:not(.choosing) #listen,#writing:not(.choosing) #choices{display:none!important}#writing.choosing #listen{width:min(600px,90%);min-height:76px;font-size:28px}#writing.choosing #choices{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:min(800px,100%);margin:16px 0}#writing #choices button{font-size:clamp(30px,5vw,54px);min-height:clamp(110px,20dvh,180px);border-width:3px}#writing #choices button.incorrect{border-color:#da7465;background:#ffe4dd}#writing #writing-title{flex:none;margin:0;font-size:clamp(52px,9dvh,88px);line-height:1.1;text-align:center;width:100%}
 #writing .paper,#writing:has(details[open]) .paper{flex:none;width:min(520px,68vw,56dvh);height:min(520px,68vw,56dvh);margin:0;align-self:center;min-width:0;position:relative}#writing #ghost{font-size:min(440px,56vw,46dvh)}#writing #feedback{flex:none;text-align:center;font-size:18px;line-height:1.3;margin:0;min-height:24px;width:100%}.answer-actions{display:flex;justify-content:center;gap:18px;width:min(650px,100%)}.answer-actions button,#writing #submit{flex:1;min-height:64px;margin:0;padding:12px;font-size:24px;max-width:none;white-space:nowrap}#writing #submit{min-height:64px;border-radius:12px}#writing .paper{background-image:linear-gradient(45deg,transparent 49.7%,#d5bba740 50%,transparent 50.3%),linear-gradient(-45deg,transparent 49.7%,#d5bba740 50%,transparent 50.3%)}#ink{touch-action:none}#setup{width:min(720px,94vw);max-width:720px}#setup select{font-size:18px}#setup h2{font-size:26px}
 @media(max-height:550px){#writing[open],#writing.choosing[open]{gap:7px;padding:12px}#writing #writing-title{font-size:42px}#writing .paper{width:52dvh;height:52dvh}#writing #feedback{font-size:14px;min-height:18px}.answer-actions button,#writing #submit{font-size:18px;min-height:44px;padding:6px}#writing.choosing #choices button{min-height:24dvh}#writing.choosing #listen{min-height:48px;font-size:22px}}
+
+#writing.choosing #parent-assist{display:none!important}#writing #parent-assist{font-size:16px;min-height:40px;padding:8px 24px;flex:none;opacity:.85}#parent-dialog{width:min(420px,90vw);padding:26px}#parent-dialog label{display:block;font-size:20px;margin:18px 0 8px}#parent-password{display:block;width:100%;font-size:26px;padding:12px;border:2px solid #d5b49e;border-radius:10px;background:#fffef8}#parent-error{min-height:24px;color:#b23d35}.parent-actions{display:flex;gap:14px}.parent-actions button{flex:1;font-size:20px;min-height:52px}#writing:not(.choosing)[open]{gap:12px}#writing:not(.choosing) .paper{width:min(500px,68vw,50dvh);height:min(500px,68vw,50dvh)}
 </style></head><body>
 <header><a href="#" class="brand">🗝️ chris 华语迷宫大冒险 <small>PUMPKIN PARTY</small></a><button id="music-toggle" aria-pressed="true" title="背景音乐开关">♫ 音乐：开</button><button id="configure">题目</button><button id="guide">帮助</button></header>
 <main><div class="layout"><section class="arena"><div class="hud"><span id="hearts">♥ ♥ ♥</span><span id="maze-name" class="maze-badge">南瓜小径</span><span id="status" aria-live="polite">准备开始冒险</span><button id="pause">开始游戏 ▶</button></div><div class="board-wrap"><canvas id="maze" width="900" height="780" aria-label="迷宫：使用方向键、WASD 或下方方向按钮移动"></canvas><div id="overlay"><span class="crest">🎃</span><h2>南瓜派对，准备好了吗？</h2><p>先选词组范围，再去六张循环迷宫里找钥匙！</p><button id="start" class="primary">选择范围，开始冒险 →</button></div></div><div class="arena-bottom"><span><b class="legend-hero">●</b> 蓝衣探险家 &nbsp; <b class="legend-enemy">●</b> 红色机器人 &nbsp; <b class="legend-key">◆</b> 金色钥匙</span><span id="danger">机器人正在等待…</span></div></section>
 <aside><section class="card"><span class="eyebrow">ESCAPE INVENTORY</span><h2>你的钥匙背包</h2><div id="keyring"></div><div class="meter"><i id="progress"></i></div><p id="door-status">还需要 5 把钥匙才能开门</p></section><section class="card controls"><h3>🎃 魔法操作台</h3><p>走到 🗝️ 上，听音选词再写字。<br>写字时追逐会暂停，放心写！</p><label>追逐难度 <select id="difficulty"><option value="500">探险 · 快步追</option><option value="320">挑战 · 极速追</option></select></label><button id="restart" class="wide">↻ 重新挑战</button><div class="dpad"><button data-dx="0" data-dy="-1" aria-label="向上">↑</button><div><button data-dx="-1" data-dy="0" aria-label="向左">←</button><button data-dx="0" data-dy="1" aria-label="向下">↓</button><button data-dx="1" data-dy="0" aria-label="向右">→</button></div></div><p class="keyboard">按住连续走 · 也可用方向键 / WASD</p></section></aside></div></main>
 <dialog id="setup"><div class="setup-heading"><span>🎃 开局设置</span><button id="setup-cancel">取消 ×</button></div><h2>今天想练习哪几组？</h2><p>每次开始前都能调整；只会从选定范围抽题。</p><div class="range-fields"><label>从第几组<select id="course-from"></select></label><span>到</span><label>到第几组<select id="course-to"></select></label></div><p id="range-summary" aria-live="polite"></p><label class="maze-field">选择迷宫路线<select id="maze-choice"></select></label><p class="setup-note">六张地图都有循环路线，无死胡同。重新开局会重置钥匙与爱心。</p><button id="confirm-round" class="primary wide">设置好了，开始探险 →</button></dialog>
-<dialog id="writing" aria-label="钥匙答题"><button id="listen" class="listen" aria-label="播放字词读音">🔊 播放声音</button><div id="choices" aria-label="四个字词选项"></div><h2 id="writing-title"></h2><div class="paper"><canvas id="ink" width="360" height="360" aria-label="在田字格内手写汉字"></canvas><span id="ghost"></span></div><p id="feedback" role="status" aria-live="polite"></p><div class="answer-actions"><button id="hint">提示</button><button id="clear">重写</button><button id="submit" class="primary">提交答案</button></div><span id="audio" class="sr-only" role="status" aria-live="polite"></span></dialog>
+<dialog id="writing" aria-label="钥匙答题"><button id="listen" class="listen" aria-label="播放字词读音">🔊 播放声音</button><div id="choices" aria-label="四个字词选项"></div><h2 id="writing-title"></h2><div class="paper"><canvas id="ink" width="360" height="360" aria-label="在田字格内手写汉字"></canvas><span id="ghost"></span></div><p id="feedback" role="status" aria-live="polite"></p><div class="answer-actions"><button id="hint">提示</button><button id="clear">重写</button><button id="submit" class="primary">提交答案</button></div><button id="parent-assist" class="parent-assist">家长辅助</button><span id="audio" class="sr-only" role="status" aria-live="polite"></span></dialog>
+<dialog id="parent-dialog" aria-labelledby="parent-title"><form id="parent-form"><h2 id="parent-title">家长辅助</h2><p>家长确认后，可让当前字通过。</p><label for="parent-password">请输入家长密码</label><input id="parent-password" type="password" inputmode="numeric" autocomplete="off" maxlength="12" required><p id="parent-error" role="alert"></p><div class="parent-actions"><button id="parent-cancel" type="button">取消</button><button type="submit" class="primary">确认通过</button></div></form></dialog>
 <dialog id="result"><div id="result-icon" class="result-icon">🏆</div><h2 id="result-title"></h2><p id="result-text"></p><button id="retry" class="primary wide">再挑战一次 →</button><button id="rest" class="wide">先休息一下</button></dialog>
 <dialog id="help"><h2>你的任务：拿钥匙，逃出迷宫！</h2><p>用方向键、WASD 或屏幕按钮移动。机器人会沿着走廊追你，墙壁能挡路。拿齐五把钥匙后，去右上角的出口。</p><p>走到钥匙站会直接朗读字词。先从四个选项中选出正确答案，再逐字书写。整词写对才能获得钥匙并继续移动。听题和写字时追逐暂停；选错、写错都可以重试。</p><p>被抓一次消耗一颗心，回到起点，保留钥匙并获得短暂无敌。三颗心用完可以重新挑战。</p><p>每局是一次短冒险。结束后给小手和眼睛放个假。中文声音依赖设备语音支持；无法朗读时可让家长看提示读题。每次开局前可设定起始词组、结束词组与迷宫路线，范围内随机抽五个字词，同局不重复。六张迷宫都是循环路线，没有死胡同；每个钥匙点都有不止一条进出路线。写字时田字格在屏幕中央，逐笔检查方向、转折和收笔的钩。笔迹不上传。</p><details class="credits"><summary>笔画数据来源与许可</summary><p>笔画数据来自 Hanzi Writer Data / Make Me a Hanzi，Copyright (C) 1999 Arphic Technology Co., Ltd.；坐标转换为画板尺寸。数据按 Arphic Public License 提供，无担保，可依许可再分发。拼音工具：pinyin-pro（MIT）。界面楷体：用户提供的方正楷体简体。Copyright(c) Founder Corporation.2000。</p><pre id="stroke-license">ARPHIC PUBLIC LICENSE
 
@@ -232,16 +235,18 @@ function terminalHook(points){
  let corner=38;for(let j=39;j<62;j++)if(pointsSample[j][1]>pointsSample[corner][1])corner=j;
  const end=pointsSample.at(-1),pivot=pointsSample[corner],before=pointsSample[Math.max(0,corner-12)];
  const tail=[end[0]-pivot[0],end[1]-pivot[1]],incoming=[pivot[0]-before[0],pivot[1]-before[1]],length=Math.hypot(...tail),inLength=Math.hypot(...incoming);
- if(tail[1]<-Math.max(4,extent*.035)&&length>Math.max(7,extent*.055)&&inLength>4&&(incoming[0]*tail[0]+incoming[1]*tail[1])/(length*inLength)<.55)return {tail,length,corner:corner/63};
+ if(tail[1]<-Math.max(4,extent*.035)&&length>Math.max(7,extent*.055)&&inLength>4&&((incoming[0]*tail[0]+incoming[1]*tail[1])/(length*inLength)<.55||tail[1]<-extent*.16))return {tail,length,corner:corner/63};
  return null;
 }
 function recognize(strokes,lesson){
  if(!lesson||!Array.isArray(strokes)||strokes.some(s=>!Array.isArray(s)||s.length<2||s.some(p=>!Array.isArray(p)||p.length!==2||p.some(v=>!Number.isFinite(v)))))return {ok:false,reason:'先写下完整的笔画，再来试试看。'};
  if(strokes.length!==lesson.strokes.length)return {ok:false,reason:`这个字有 ${lesson.strokes.length} 笔，请按笔顺写完整。`};
  const a=normalize(strokes),b=normalize(lesson.strokes);if(!a)return {ok:false,reason:'请把字写大一点。'};
+ let totalDistance=0;
  for(let i=0;i<a.length;i++){
   const distances=a[i].map((p,j)=>Math.hypot(p[0]-b[i][j][0],p[1]-b[i][j][1]));
   const mean=distances.reduce((sum,d)=>sum+d,0)/distances.length;
+  totalDistance+=mean;
   const hook=terminalHook(lesson.strokes[i]);
   if(hook){
    // Compare the terminal movement in normalized character coordinates. A plain
@@ -250,11 +255,19 @@ function recognize(strokes,lesson){
    const wanted=[expected[63][0]-expected[q][0],expected[63][1]-expected[q][1]],length=Math.hypot(...wanted);
    let bottom=35;for(let j=36;j<63;j++)if(actual[j][1]>actual[bottom][1])bottom=j;
    const tail=[actual[63][0]-actual[bottom][0],actual[63][1]-actual[bottom][1]],projection=(tail[0]*wanted[0]+tail[1]*wanted[1])/length;
-   if(projection<length*.5||tail[1]>=-Math.abs(wanted[1])*.35)return {ok:false,reason:`第 ${i+1} 笔的钩没有写完整，请在收笔时钩出来。`};
+   if(projection<length*.35||tail[1]>=-Math.abs(wanted[1])*.45)return {ok:false,reason:`第 ${i+1} 笔的钩没有写完整，请在收笔时钩出来。`};
   }
-  if(mean>.105||Math.max(...distances)>.23||distances[0]>.13||distances.at(-1)>.12)return {ok:false,reason:`请检查第 ${i+1} 笔的方向、位置和转折。`};
+  // Check the stroke itself independently of its position/size in the character.
+  // This tolerates uneven spacing and proportions while retaining stroke direction.
+  const localA=normalize([strokes[i]]),localB=normalize([lesson.strokes[i]]);
+  if(localA&&localB){
+   const shapeError=localA[0].reduce((sum,p,j)=>sum+Math.hypot(p[0]-localB[0][j][0],p[1]-localB[0][j][1]),0)/24;
+   if(shapeError>.26)return {ok:false,reason:`请检查第 ${i+1} 笔的方向和转折。`};
+  }
+  if(mean>.34)return {ok:false,reason:`第 ${i+1} 笔的位置偏得有点远，再试一次。`};
  }
- return {ok:true};
+ const similarity=Math.max(0,1-totalDistance/a.length);
+ return {ok:similarity>=.8,similarity,reason:'字形大致写像就可以，请稍微调整各笔的位置。'};
 }
 
 
@@ -420,5 +433,11 @@ if(document.fonts)document.fonts.load("12px GameFounderKai").then(()=>buildScene
 
 // Set the practice range before the first adventure.
 openSetup();
+
+$('parent-assist').onclick=()=>{if(state!=='writing'||!choicePassed||solved||pointer!==null)return;$('parent-password').value='';$('parent-error').textContent='';$('parent-dialog').showModal();$('parent-password').focus();};
+function closeParent(){$('parent-password').value='';$('parent-error').textContent='';$('parent-dialog').close();}
+$('parent-cancel').onclick=closeParent;
+$('parent-dialog').addEventListener('cancel',e=>{e.preventDefault();closeParent();});
+$('parent-form').onsubmit=e=>{e.preventDefault();if(!$('parent-dialog').open||state!=='writing'||!choicePassed||solved||pointer!==null)return;if($('parent-password').value!=='666'){$('parent-error').textContent='密码不正确，请重试。';$('parent-password').value='';$('parent-password').focus();return;}closeParent();completeCharacter();};
 </script></body></html>
 

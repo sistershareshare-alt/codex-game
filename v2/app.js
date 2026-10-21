@@ -95,3 +95,9 @@ if(document.fonts)document.fonts.load("12px GameFounderKai").then(()=>buildScene
 
 // Set the practice range before the first adventure.
 openSetup();
+
+$('parent-assist').onclick=()=>{if(state!=='writing'||!choicePassed||solved||pointer!==null)return;$('parent-password').value='';$('parent-error').textContent='';$('parent-dialog').showModal();$('parent-password').focus();};
+function closeParent(){$('parent-password').value='';$('parent-error').textContent='';$('parent-dialog').close();}
+$('parent-cancel').onclick=closeParent;
+$('parent-dialog').addEventListener('cancel',e=>{e.preventDefault();closeParent();});
+$('parent-form').onsubmit=e=>{e.preventDefault();if(!$('parent-dialog').open||state!=='writing'||!choicePassed||solved||pointer!==null)return;if($('parent-password').value!=='666'){$('parent-error').textContent='密码不正确，请重试。';$('parent-password').value='';$('parent-password').focus();return;}closeParent();completeCharacter();};

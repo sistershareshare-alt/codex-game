@@ -13,7 +13,7 @@ test('all 50 teacher words have usable stroke templates and four distinct choice
 test('listening gates writing, each character gates the key, and unfinished challenge cannot exit',()=>{
  const elements=new Map();
  const context2d=new Proxy({}, {get:()=>()=>({addColorStop(){}}),set:()=>true});
- function el(id){if(!elements.has(id)){const e={id,value:'',textContent:'',innerHTML:'',style:{},open:false,children:[],classList:{add(){},remove(){},toggle(){}},getContext:()=>context2d,addEventListener(){},setAttribute(){},querySelector:()=>({open:false,textContent:''}),replaceChildren(){this.children=[]},append(b){this.children.push(b)},showModal(){this.open=true},close(){this.open=false}};elements.set(id,e);}return elements.get(id);}
+ function el(id){if(!elements.has(id)){const e={id,value:'',textContent:'',innerHTML:'',style:{},open:false,children:[],classList:{add(){},remove(){},toggle(){}},getContext:()=>context2d,addEventListener(){},setAttribute(){},focus(){},querySelector:()=>({open:false,textContent:''}),replaceChildren(){this.children=[]},append(b){this.children.push(b)},showModal(){this.open=true},close(){this.open=false}};elements.set(id,e);}return elements.get(id);}
  const scope={console,Math,Set,Map,JSON,Number,Array,performance:{now:()=>1000},setInterval,clearInterval,requestAnimationFrame(){},Image:class{},localStorage:{getItem:()=>null,setItem(){}},document:{getElementById:el,createElement:()=>el(Symbol()),querySelectorAll:()=>[],addEventListener(){},body:{classList:{toggle(){}}}},window:{addEventListener(){}}};
  const code=['word-bank.js','curriculum.js','vocabulary.js','recognition.js','maze.js','music.js','app.js'].map(file=>fs.readFileSync(new URL(file,import.meta.url),'utf8').split('\n').filter(line=>!line.startsWith('import ')).join('\n').replace(/^export \{[^}]*\};?$/gm,'').replace(/\bexport (?=const |let |function )/g,'')).join('\n');
  vm.createContext(scope);vm.runInContext(code,scope);
@@ -25,5 +25,12 @@ test('listening gates writing, each character gates the key, and unfinished chal
  run("strokes=[[[0,0],[359,359]]];$('submit').onclick()");assert.equal(run('characterIndex'),0);assert.equal(run('keys.size'),0);
  for(let i=0;i<3;i++){run("strokes=currentCharacter().strokes;$('submit').onclick()");assert.equal(run('keys.size'),i===2?1:0);}
  run("$('submit').onclick()");assert.equal(run('state'),'running');assert.equal(el('writing').open,false);
+ run("keys=new Set();lessons=[vocabulary.find(x=>x.char==='我')];openWriting(0)");
+ run("$('parent-assist').onclick()");assert.equal(el('parent-dialog').open,false);
+ el('choices').children.find(x=>x.textContent==='我').onclick();run("$('parent-assist').onclick()");assert.equal(el('parent-dialog').open,true);
+ const formEvent={preventDefault(){}};
+ el('parent-password').value='123';el('parent-form').onsubmit(formEvent);assert.equal(run('keys.size'),0);assert.equal(el('parent-dialog').open,true);
+ el('parent-password').value='666';run("$('parent-cancel').onclick()");assert.equal(run('keys.size'),0);assert.equal(el('parent-password').value,'');
+ run("$('parent-assist').onclick()");assert.equal(el('parent-password').value,'');el('parent-password').value='666';el('parent-form').onsubmit(formEvent);assert.equal(run('keys.size'),1);assert.equal(el('parent-dialog').open,false);assert.equal(el('parent-password').value,'');
  const html=fs.readFileSync(new URL('../docs/v2/index.html',import.meta.url),'utf8');new vm.Script(html.match(/<script>([\s\S]*)<\/script>/)[1]);
 });

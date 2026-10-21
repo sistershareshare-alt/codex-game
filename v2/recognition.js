@@ -8,16 +8,18 @@ function terminalHook(points){
  let corner=38;for(let j=39;j<62;j++)if(pointsSample[j][1]>pointsSample[corner][1])corner=j;
  const end=pointsSample.at(-1),pivot=pointsSample[corner],before=pointsSample[Math.max(0,corner-12)];
  const tail=[end[0]-pivot[0],end[1]-pivot[1]],incoming=[pivot[0]-before[0],pivot[1]-before[1]],length=Math.hypot(...tail),inLength=Math.hypot(...incoming);
- if(tail[1]<-Math.max(4,extent*.035)&&length>Math.max(7,extent*.055)&&inLength>4&&(incoming[0]*tail[0]+incoming[1]*tail[1])/(length*inLength)<.55)return {tail,length,corner:corner/63};
+ if(tail[1]<-Math.max(4,extent*.035)&&length>Math.max(7,extent*.055)&&inLength>4&&((incoming[0]*tail[0]+incoming[1]*tail[1])/(length*inLength)<.55||tail[1]<-extent*.16))return {tail,length,corner:corner/63};
  return null;
 }
 function recognize(strokes,lesson){
  if(!lesson||!Array.isArray(strokes)||strokes.some(s=>!Array.isArray(s)||s.length<2||s.some(p=>!Array.isArray(p)||p.length!==2||p.some(v=>!Number.isFinite(v)))))return {ok:false,reason:'先写下完整的笔画，再来试试看。'};
  if(strokes.length!==lesson.strokes.length)return {ok:false,reason:`这个字有 ${lesson.strokes.length} 笔，请按笔顺写完整。`};
  const a=normalize(strokes),b=normalize(lesson.strokes);if(!a)return {ok:false,reason:'请把字写大一点。'};
+ let totalDistance=0;
  for(let i=0;i<a.length;i++){
   const distances=a[i].map((p,j)=>Math.hypot(p[0]-b[i][j][0],p[1]-b[i][j][1]));
   const mean=distances.reduce((sum,d)=>sum+d,0)/distances.length;
+  totalDistance+=mean;
   const hook=terminalHook(lesson.strokes[i]);
   if(hook){
    // Compare the terminal movement in normalized character coordinates. A plain
@@ -26,10 +28,18 @@ function recognize(strokes,lesson){
    const wanted=[expected[63][0]-expected[q][0],expected[63][1]-expected[q][1]],length=Math.hypot(...wanted);
    let bottom=35;for(let j=36;j<63;j++)if(actual[j][1]>actual[bottom][1])bottom=j;
    const tail=[actual[63][0]-actual[bottom][0],actual[63][1]-actual[bottom][1]],projection=(tail[0]*wanted[0]+tail[1]*wanted[1])/length;
-   if(projection<length*.5||tail[1]>=-Math.abs(wanted[1])*.35)return {ok:false,reason:`第 ${i+1} 笔的钩没有写完整，请在收笔时钩出来。`};
+   if(projection<length*.35||tail[1]>=-Math.abs(wanted[1])*.45)return {ok:false,reason:`第 ${i+1} 笔的钩没有写完整，请在收笔时钩出来。`};
   }
-  if(mean>.105||Math.max(...distances)>.23||distances[0]>.13||distances.at(-1)>.12)return {ok:false,reason:`请检查第 ${i+1} 笔的方向、位置和转折。`};
+  // Check the stroke itself independently of its position/size in the character.
+  // This tolerates uneven spacing and proportions while retaining stroke direction.
+  const localA=normalize([strokes[i]]),localB=normalize([lesson.strokes[i]]);
+  if(localA&&localB){
+   const shapeError=localA[0].reduce((sum,p,j)=>sum+Math.hypot(p[0]-localB[0][j][0],p[1]-localB[0][j][1]),0)/24;
+   if(shapeError>.26)return {ok:false,reason:`请检查第 ${i+1} 笔的方向和转折。`};
+  }
+  if(mean>.34)return {ok:false,reason:`第 ${i+1} 笔的位置偏得有点远，再试一次。`};
  }
- return {ok:true};
+ const similarity=Math.max(0,1-totalDistance/a.length);
+ return {ok:similarity>=.8,similarity,reason:'字形大致写像就可以，请稍微调整各笔的位置。'};
 }
 export {wordBank as lessons,recognize};
