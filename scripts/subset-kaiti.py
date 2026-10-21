@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from fontTools import subset
 root=Path(__file__).resolve().parents[1]
-paths=['index.html','app.js','word-bank.js','curriculum.js','recognition.js','licenses/ARPHICPL.TXT','licenses/Founder-font-NOTICE.txt']
+paths=['index.html','app.js','word-bank.js','curriculum.js','recognition.js','maze.js','licenses/ARPHICPL.TXT','licenses/Founder-font-NOTICE.txt']
 chars=set(''.join((root/p).read_text() for p in paths))
 unicodes={ord(c) for c in chars}|set(range(0x20,0x250))
 options=subset.Options()

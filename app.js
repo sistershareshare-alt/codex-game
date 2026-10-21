@@ -1,11 +1,13 @@
 import {recognize} from './recognition.js';
 import {wordBank} from './word-bank.js';
-import {curriculum,pickRound} from './curriculum.js';
-import {grid,start,enemyStart,exit,keySites,walkable,route,doorOpen} from './maze.js';
+import {curriculum,pickRound,rangeBank} from './curriculum.js';
+import {grid,start,enemyStart,exit,keySites,walkable,route,doorOpen,mazeLayouts,selectMaze} from './maze.js';
 const $=id=>document.getElementById(id),board=$('maze'),g=board.getContext('2d'),ink=$('ink'),pen=ink.getContext('2d');
 let player={...start},enemy={...enemyStart},keys=new Set(),hearts=3,state='ready',station=-1,invincible=0,lastEnemy=0,lastMove=0,held=null,strokes=[],pointer=null,solved=false;
 let lessons=[],previousRound=[],strokePreview=null;
 try{const saved=JSON.parse(localStorage.getItem('hanzi-last-round')||'[]');if(Array.isArray(saved))previousRound=saved.filter(c=>typeof c==='string').map(char=>({char}));}catch{}
+let activeRange={from:'1.1',to:'1.19'},selectedMap='random',lastMazeId=null,setupFromResult=false;
+try{const saved=JSON.parse(localStorage.getItem('hanzi-setup')||'null');if(saved&&curriculum.some(c=>c.id===saved.from)&&curriculum.some(c=>c.id===saved.to)&&rangeBank(wordBank,saved.from,saved.to).length>=5){activeRange={from:saved.from,to:saved.to};selectedMap=saved.map==='random'||mazeLayouts.some(m=>String(m.id)===String(saved.map))?saved.map:'random';}const oldValue=localStorage.getItem('hanzi-last-maze'),old=Number(oldValue);if(oldValue!==null&&Number.isInteger(old)&&mazeLayouts.some(m=>m.id===old))lastMazeId=old;}catch{}
 const cell=60;let particles=[],notice='找到钥匙站，机器人正在追你！';
 function hud(){ $('hearts').textContent=Array.from({length:3},(_,i)=>i<hearts?'♥':'♡').join(' ');$('status').textContent=state==='running'?notice:state==='paused'?'⏸ 已暂停':state==='writing'?'✎ 写字中 · 追逐已暂停':state==='won'?'成功逃脱！':state==='lost'?'下次一定可以！':'准备开始冒险';$('pause').textContent=state==='running'?'暂停 Ⅱ':state==='paused'?'继续 ▶':state==='ready'?'开始游戏 ▶':'冒险中';$('keyring').innerHTML=keySites.map((_,i)=>`<span class="${keys.has(i)?'got':''}" aria-label="钥匙 ${i+1}${keys.has(i)?' 已获得':' 未获得'}">🗝️</span>`).join('');$('progress').style.width=`${keys.size*20}%`;$('door-status').textContent=doorOpen(keys)?'全部集齐！快去右上角出口！':`还需要 ${5-keys.size} 把钥匙才能开门`;}
 const scenery=document.createElement('canvas');scenery.width=900;scenery.height=780;
@@ -13,13 +15,13 @@ function rounded(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);c
 function ellipse(c,x,y,rx,ry,fill){c.beginPath();c.ellipse(x,y,rx,ry,0,0,7);c.fillStyle=fill;c.fill();}
 function flower(c,x,y,r){for(let i=0;i<5;i++){let a=i*Math.PI*2/5;ellipse(c,x+Math.cos(a)*r*.7,y+Math.sin(a)*r*.7,r*.55,r*.55,'#fff9d9');}ellipse(c,x,y,r*.36,r*.36,'#e6b644');}
 function leaf(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);ellipse(c,0,0,5,2.5,'#83cb62');c.restore();}
-{
+function buildScenery(){
 const c=scenery.getContext('2d');c.fillStyle='#fff1b8';c.fillRect(0,0,900,780);
 for(let y=0;y<grid.length;y++)for(let x=0;x<grid[y].length;x++){let px=x*60,py=y*60;
 if(grid[y][x]==='#'){
-rounded(c,px+1,py+8,58,51,9,'#3f9d86');
-const grad=c.createLinearGradient(px,py,px,py+48);grad.addColorStop(0,'#c1f08f');grad.addColorStop(.24,'#87d87c');grad.addColorStop(1,'#54b99a');
-rounded(c,px+2,py+1,56,49,8,grad,'#419d83');rounded(c,px+7,py+4,46,5,2,'#e4ffc4');
+rounded(c,px+1,py+8,58,51,9,'#795591');
+const grad=c.createLinearGradient(px,py,px,py+48);grad.addColorStop(0,'#f5d49e');grad.addColorStop(.24,'#c69bc7');grad.addColorStop(1,'#9976b4');
+rounded(c,px+2,py+1,56,49,8,grad,'#8565a4');rounded(c,px+7,py+4,46,5,2,'#ffe9bc');
 c.strokeStyle='#ffffff12';c.beginPath();c.moveTo(px+9,py+25);c.lineTo(px+50,py+25);c.moveTo(px+30,py+10);c.lineTo(px+30,py+24);c.stroke();
 // Seeded flecks, soft moss and flowers make each hand-drawn stone different.
 for(let j=0;j<7;j++){let nx=8+(x*17+y*29+j*13)%43,ny=10+(x*11+y*7+j*19)%32;ellipse(c,px+nx,py+ny,3+(j%3),2,'#f4ffd23c');}
@@ -27,7 +29,7 @@ if((x*7+y*3)%4===0){ellipse(c,px+15,py+35,11,6,'#a8d850');ellipse(c,px+23,py+30,
 if((x*3+y*5)%9===0){flower(c,px+40,py+16,5);flower(c,px+30,py+12,3);}
 if((x+y*3)%7===0){c.strokeStyle='#65af65';c.lineWidth=2;c.beginPath();c.moveTo(px+7,py+3);c.quadraticCurveTo(px+20,py+20,px+8,py+43);c.stroke();leaf(c,px+12,py+15,.3);leaf(c,px+10,py+32,-.7);}
 }else{
-rounded(c,px+2,py+2,56,56,5,(x+y)%2?'#fff6d5':'#ffedbd');
+rounded(c,px+2,py+2,56,56,5,(x+y)%2?'#fff0d1':'#fce0ba');
 c.fillStyle='#e8ca8f';if((x+y)%4===0){c.fillRect(px+14,py+16,3,3);c.fillRect(px+40,py+44,2,2);c.strokeStyle='#d8b16c45';c.lineWidth=1;c.beginPath();c.moveTo(px+3,py+39);c.lineTo(px+11,py+34);c.lineTo(px+13,py+26);c.stroke();}
 if((x*11+y*3)%13===0){leaf(c,px+48,py+49,.4);leaf(c,px+42,py+48,-.8);}
 }
@@ -41,7 +43,7 @@ g.save();ellipse(g,x,y+23,22,7,'#3e422b50');g.shadowColor=which?'#fff0da':'#e6fc
 const sw=characterArt.naturalWidth/2,sh=characterArt.naturalHeight;
 g.drawImage(characterArt,which*sw,0,sw,sh,x-34,y-35+bob,68,68);g.shadowBlur=0;
 if(!which&&t<invincible){g.strokeStyle='#59c9ff';g.lineWidth=2;g.beginPath();g.arc(x,y,28,0,7);g.stroke();}
-g.restore();return true;
+if(!which){g.fillStyle='#724f9b';g.beginPath();g.moveTo(x-17,y-20);g.lineTo(x+1,y-40);g.lineTo(x+14,y-20);g.closePath();g.fill();ellipse(g,x,y-20,21,4,'#9e75bc');rounded(g,x-6,y-26,12,4,1,'#ffcd72');}else{g.strokeStyle='#f6a744';g.lineWidth=2;g.beginPath();g.arc(x,y+9,24,.1,3.05);g.stroke();}g.restore();return true;
 }
 function heroSprite(p,t){if(paintedCharacter(p,t,0))return;let x=p.x*60+30,y=p.y*60+29;g.save();g.translate(x,y);ellipse(g,0,22,23,8,'#3d4c5a50');g.shadowColor='#ffffff';g.shadowBlur=9;
 // Blue explorer cape, boots and face, with solid outlines for small screens.
@@ -55,9 +57,9 @@ function catchPlayer(t){if(t<invincible)return;hearts--;if(hearts<=0){finish(fal
 function checkPosition(t){if(player.x===enemy.x&&player.y===enemy.y){catchPlayer(t);if(state!=='running')return;}let i=keySites.findIndex(k=>k.x===player.x&&k.y===player.y);if(i>=0&&!keys.has(i)){openWriting(i);return;}if(player.x===exit.x&&player.y===exit.y){if(doorOpen(keys))finish(true);else{notice=`门还锁着！再找 ${5-keys.size} 把钥匙`;hud();}}}
 function move(dx,dy){if(state!=='running')return;let t=performance.now();if(t-lastMove<130)return;lastMove=t;if(walkable(player.x+dx,player.y+dy)){player.x+=dx;player.y+=dy;notice=doorOpen(keys)?'出口已开启！往右上角跑！':'找到钥匙站，写对汉字拿钥匙';checkPosition(t);hud();}}
 function loop(t){if(state==='running'){if(held&&t-lastMove>155)move(...held);let speed=Number($('difficulty').value)-keys.size*40;if(t-lastEnemy>speed){lastEnemy=t;let path=route(enemy,player);if(path.length>1)enemy={...path[1]};if(enemy.x===player.x&&enemy.y===player.y)catchPlayer(t);}}draw(t);requestAnimationFrame(loop);}requestAnimationFrame(loop);
-function begin(){stopPreview();activeCourse=$('course').value;lessons=pickRound(wordBank,$('course').value,previousRound);previousRound=lessons;try{localStorage.setItem('hanzi-last-round',JSON.stringify(lessons.map(l=>l.char)));}catch{}updateCourseLabel();player={...start};enemy={...enemyStart};keys=new Set();hearts=3;state='running';station=-1;held=null;invincible=performance.now()+2500;lastEnemy=performance.now();notice='快找钥匙站！机器人出发了';$('overlay').style.display='none';$('result').close();$('writing').close();hud();}
-function pause(){held=null;if(state==='ready')return begin();if(state==='running'){state='paused';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='喘口气，迷宫已暂停。';$('overlay').querySelector('p').textContent='准备好后继续冒险。';$('start').textContent='继续逃脱 →';}else if(state==='paused'){state='running';lastEnemy=performance.now();$('overlay').style.display='none';}hud();}
-$('start').onclick=()=>state==='paused'?pause():begin();$('pause').onclick=pause;$('restart').onclick=()=>{if(state==='running')pause();if(confirm('重新开始会清空本局钥匙，要重新挑战吗？'))begin();};
+function begin(){stopPreview();activeRange={from:$('course-from').value,to:$('course-to').value};selectedMap=$('maze-choice').value;lessons=pickRound(rangeBank(wordBank,activeRange.from,activeRange.to),'all',previousRound);const layout=selectMaze(selectedMap,lastMazeId);lastMazeId=layout.id;buildScenery();$('maze-name').textContent=layout.name;try{localStorage.setItem('hanzi-setup',JSON.stringify({...activeRange,map:selectedMap}));localStorage.setItem('hanzi-last-maze',String(lastMazeId));}catch{}$('setup').close();previousRound=lessons;try{localStorage.setItem('hanzi-last-round',JSON.stringify(lessons.map(l=>l.char)));}catch{}updateCourseLabel();player={...start};enemy={...enemyStart};keys=new Set();hearts=3;state='running';station=-1;held=null;invincible=performance.now()+2500;lastEnemy=performance.now();notice='南瓜灯亮了！找钥匙，躲开机器人';$('overlay').style.display='none';$('result').close();$('writing').close();hud();}
+function pause(){held=null;if(state==='ready')return openSetup();if(state==='running'){state='paused';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='喘口气，迷宫已暂停。';$('overlay').querySelector('p').textContent='准备好后继续冒险。';$('start').textContent='继续逃脱 →';}else if(state==='paused'){state='running';lastEnemy=performance.now();$('overlay').style.display='none';}hud();}
+$('start').onclick=()=>state==='paused'?pause():openSetup();$('pause').onclick=pause;$('restart').onclick=openSetup;
 const dirs={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};document.addEventListener('keydown',e=>{if(e.target.matches('select'))return;if(e.target.matches('button,summary')&&e.key===' ')return;let dir=dirs[e.key]||dirs[e.key.toLowerCase()];if(dir&&state==='running'){e.preventDefault();held=dir;move(...dir);}if(e.code==='Space'&&!document.querySelector('dialog[open]')){e.preventDefault();pause();}});document.addEventListener('keyup',e=>{if(dirs[e.key]||dirs[e.key.toLowerCase()])held=null;});document.querySelectorAll('[data-dx]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);held=[+b.dataset.dx,+b.dataset.dy];move(...held);};b.onpointerup=b.onpointercancel=()=>held=null;});window.addEventListener('blur',()=>{held=null;if(state==='running')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='running')pause();});
 function speak(){if(!('speechSynthesis'in window)){ $('audio').textContent='设备不支持语音，请看提示，请家长读题。';return;}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(lessons[station].word);u.lang='zh-CN';u.rate=.7;let v=speechSynthesis.getVoices().find(v=>/^zh/.test(v.lang));if(v)u.voice=v;u.onend=()=>$('audio').textContent='听清楚了吗？可以再听一次。';u.onerror=()=>$('audio').textContent='声音不可用，请家长查看提示读题。';$('audio').textContent='🔊 仔细听一听…';speechSynthesis.speak(u);}
 function openWriting(i){stopPreview();station=i;state='writing';held=null;solved=false;strokes=[];pointer=null;paint();$('ghost').textContent='';$('feedback').textContent=`第 ${lessons[i].courses.join(' / ')} 课 · 写对这个字，就能拿到钥匙！`;$('submit').textContent='写好了，解锁钥匙！';$('audio').textContent='点击上方按钮听题。';$('writing').showModal();hud();speak();}
@@ -66,15 +68,18 @@ function stopPreview(){if(strokePreview!==null){clearInterval(strokePreview);str
 function inkPoint(e){let r=ink.getBoundingClientRect();return[(e.clientX-r.left)*360/r.width,(e.clientY-r.top)*360/r.height];}ink.onpointerdown=e=>{if(solved||pointer!==null)return;stopPreview();paint();e.preventDefault();pointer=e.pointerId;ink.setPointerCapture(pointer);strokes.push([inkPoint(e)]);};ink.onpointermove=e=>{if(pointer!==e.pointerId)return;strokes.at(-1).push(inkPoint(e));paint();};ink.onpointerup=ink.onpointercancel=e=>{if(pointer!==e.pointerId)return;if(strokes.at(-1).length<2)strokes.pop();pointer=null;paint();};
 $('clear').onclick=()=>{if(!solved){stopPreview();strokes=[];paint();}};$('undo').onclick=()=>{if(!solved&&pointer===null){stopPreview();strokes.pop();paint();}};$('hint').onclick=()=>{$('ghost').textContent=lessons[station].char;$('feedback').textContent=`${lessons[station].char}（${lessons[station].pinyin}）：${lessons[station].tip}`;};$('listen').onclick=speak;
 function award(){if(solved)return;keys.add(station);solved=true;$('feedback').textContent=`🗝️ 写对「${lessons[station].char}」！获得钥匙 ${keys.size}/5。`;$('submit').textContent=doorOpen(keys)?'钥匙集齐！冲向出口 →':'拿着钥匙，继续跑！ →';hud();}
-function leaveWriting(){stopPreview();if('speechSynthesis'in window)speechSynthesis.cancel();$('writing').close();state='running';held=null;lastEnemy=performance.now();invincible=performance.now()+2200;notice=doorOpen(keys)?'五把钥匙集齐！快去右上角出口！':'继续找钥匙！刚出钥匙站有短暂无敌';if(solved){let t=performance.now();for(let i=0;i<18;i++)particles.push({x:player.x*60+30,y:player.y*60+30,vx:(Math.random()-.5)*200,vy:(Math.random()-.5)*200,t});}hud();}
+function leaveWriting(){stopPreview();if('speechSynthesis'in window)speechSynthesis.cancel();$('writing').close();state='running';held=null;lastEnemy=performance.now();invincible=performance.now()+4000;notice=doorOpen(keys)?'五把钥匙集齐！快去右上角出口！':'继续找钥匙！刚出钥匙站有短暂无敌';if(solved){let t=performance.now();for(let i=0;i<18;i++)particles.push({x:player.x*60+30,y:player.y*60+30,vx:(Math.random()-.5)*200,vy:(Math.random()-.5)*200,t});}hud();}
 $('submit').onclick=()=>{if(pointer!==null)return;stopPreview();paint();if(solved)return leaveWriting();let result=recognize(strokes,lessons[station]);if(result.ok)award();else $('feedback').textContent='🌱 '+result.reason;};$('approve').onclick=()=>{if(strokes.length)award();else $('feedback').textContent='请先写下答案，再请家长确认。';};$('leave').onclick=leaveWriting;$('writing').addEventListener('cancel',e=>{e.preventDefault();leaveWriting();});
 function finish(won){state=won?'won':'lost';held=null;$('result-icon').textContent=won?'🏆':'🌱';$('result-title').textContent=won?'大门打开，逃脱成功！':'被机器人追上啦！';$('result-text').textContent=won?'你用五个汉字换来了五把钥匙！获得「汉字逃脱高手」称号。看看远处，活动小手，休息一下吧。':`你已经拿到 ${keys.size} 把钥匙！记住路线，下一次可以跑得更远。`;$('result').showModal();hud();}
-$('retry').onclick=begin;$('rest').onclick=()=>{$('result').close();state='ready';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='休息一下，下次再出发。';$('overlay').querySelector('p').textContent='看看远处，活动小手，回来再玩。';$('start').textContent='开始新的冒险 →';hud();};$('result').addEventListener('cancel',e=>{e.preventDefault();$('rest').click();});
+$('retry').onclick=openSetup;$('rest').onclick=()=>{$('result').close();state='ready';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='休息一下，下次再出发。';$('overlay').querySelector('p').textContent='看看远处，活动小手，回来再玩。';$('start').textContent='开始新的冒险 →';hud();};$('result').addEventListener('cancel',e=>{e.preventDefault();$('rest').click();});
 $('guide').onclick=()=>{if(state==='running')pause();$('help').showModal();};$('close-help').onclick=()=>$('help').close();hud();
 
-function updateCourseLabel(){const selected=$('course').value;const n=selected==='all'?wordBank.length:wordBank.filter(l=>l.courses.includes(selected)).length;$('bank-info').textContent=`${selected==='all'?'全部生字':`第 ${selected} 课`} · ${n} 字 · 每局随机 5 字`;}
-$('course').innerHTML='<option value="all">全部生字 · 随机练习</option>'+curriculum.map(c=>`<option value="${c.id}">第 ${c.id} 课 · ${c.chars.length} 字</option>`).join('');
-$('course').onchange=()=>{updateCourseLabel();if(state==='ready'||state==='won'||state==='lost')return;if(state==='running')pause();if(confirm('切换课次会开始新一局，换一组生字吗？'))begin();else{$('course').value=activeCourse;updateCourseLabel();}};
-let activeCourse='all';updateCourseLabel();
+function updateCourseLabel(){const pool=rangeBank(wordBank,activeRange.from,activeRange.to);$('bank-info').textContent=`第 ${activeRange.from}–${activeRange.to} 课 · ${pool.length} 字 · 每局随机 5 字`;}
+const courseOptions=curriculum.map(c=>`<option value="${c.id}">第 ${c.id} 课</option>`).join('');$('course-from').innerHTML=courseOptions;$('course-to').innerHTML=courseOptions;
+$('maze-choice').innerHTML='<option value="random">随机路线 · 避开上一张</option>'+mazeLayouts.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+function rangeSummary(changed){let from=$('course-from').value,to=$('course-to').value;const a=curriculum.findIndex(c=>c.id===from),b=curriculum.findIndex(c=>c.id===to);if(a>b){if(changed==='to')$('course-from').value=to;else $('course-to').value=from;}const count=rangeBank(wordBank,$('course-from').value,$('course-to').value).length;$('range-summary').textContent=`范围内有 ${count} 个不同生字，本局随机抽 5 个。`;}
+function openSetup(){held=null;setupFromResult=$('result').open;if(setupFromResult)$('result').close();if(state==='running')pause();$('course-from').value=activeRange.from;$('course-to').value=activeRange.to;$('maze-choice').value=selectedMap;rangeSummary();$('setup').showModal();}
+function cancelSetup(){$('setup').close();if(setupFromResult)$('result').showModal();}
+$('course-from').onchange=()=>rangeSummary('from');$('course-to').onchange=()=>rangeSummary('to');$('configure').onclick=openSetup;$('setup-cancel').onclick=cancelSetup;$('setup').addEventListener('cancel',e=>{e.preventDefault();cancelSetup();});$('confirm-round').onclick=begin;updateCourseLabel();buildScenery();
 $('stroke-demo').onclick=()=>{if(station<0)return;if(strokePreview!==null){stopPreview();paint();return;}$('ghost').textContent='';paint();const model=lessons[station];let step=0;$('stroke-demo').textContent='Ⅱ 停止示范';function show(){paint();pen.lineWidth=10;pen.strokeStyle='#dd9169';for(let i=0;i<step;i++){pen.beginPath();model.strokes[i].forEach(([x,y],j)=>j?pen.lineTo(x,y):pen.moveTo(x,y));pen.stroke();}const first=model.strokes[step-1]?.[0];if(first){pen.fillStyle='#c87952';pen.font='bold 16px GameFounderKai, KaiTi, STKaiti, serif';pen.fillText(step,first[0]-12,first[1]-7);}$('feedback').textContent=`「${model.char}」第 ${step} / ${model.strokes.length} 笔；跟着笔顺慢慢写。`;}
 step=1;show();strokePreview=setInterval(()=>{step++;if(step>model.strokes.length){stopPreview();$('feedback').textContent=`「${model.char}」共 ${model.strokes.length} 笔。动笔时示范会消失，试着自己写！`;return;}show();},650);};

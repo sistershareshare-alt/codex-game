@@ -30,3 +30,5 @@ export function pickRound(bank, course='all', previous=[], random=Math.random){
  for(let i=candidates.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
  return candidates.slice(0,5);
 }
+
+export function rangeBank(bank,from,to){const first=curriculum.findIndex(c=>c.id===from),last=curriculum.findIndex(c=>c.id===to);if(first<0||last<first)throw Error('Invalid course range');const ids=new Set(curriculum.slice(first,last+1).map(c=>c.id));return bank.filter(item=>item.courses.some(id=>ids.has(id)));}

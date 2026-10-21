@@ -1,6 +1,6 @@
 const fs=require('node:fs');const path=require('node:path');
 const root=__dirname;const read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const script=name=>read(name).split('\n').filter(line=>!line.startsWith('import ')).join('\n').replace(/^export \{[^}]*\};?$/gm,'').replace(/\bexport (?=const |function )/g,'');
+const script=name=>read(name).split('\n').filter(line=>!line.startsWith('import ')).join('\n').replace(/^export \{[^}]*\};?$/gm,'').replace(/\bexport (?=const |let |function )/g,'');
 let css=read('style.css'),code=['word-bank.js','curriculum.js','recognition.js','maze.js','app.js'].map(script).join('\n');
 
 for(const name of fs.readdirSync(path.join(root,'assets'))){const type=name.endsWith('.png')?'image/png':name.endsWith('.woff')?'font/woff':null;if(!type)continue;let ref='/assets/'+name;let data='data:'+type+';base64,'+fs.readFileSync(path.join(root,'assets',name)).toString('base64');css=css.replaceAll(ref,data);code=code.replaceAll(ref,data);}
