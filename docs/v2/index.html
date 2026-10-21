@@ -94,8 +94,11 @@ body{background-color:#f6dcc9}.brand{background:linear-gradient(#ffe8aa,#ffc88e)
 
 /* Listening gate: writing stays hidden until the correct choice. */
 [hidden]{display:none!important}#choices{display:none;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}#choices button{font-size:26px;min-height:64px}#choices button.incorrect{border-color:#c66960}#writing.choosing #choices{display:grid;grid-column:1/-1}#writing.choosing .paper,#writing.choosing .tools,#writing.choosing #submit,#writing.choosing details{display:none!important}#writing.choosing #leave{display:none}#writing.choosing{max-width:520px}#writing.choosing[open]{display:block}
+
+/* Use the supplied Founder Kai for every interface element and answer option. */
+*,*::before,*::after{font-family:var(--game-font)!important}#music-toggle{white-space:nowrap;font-size:13px;margin-left:auto}header .brand{min-width:0}header .brand small{display:none}@media(max-width:760px){header{gap:6px}.brand{font-size:14px;padding:7px 8px}header>button{font-size:10px;padding:6px 7px}#music-toggle{font-size:10px}}
 </style></head><body>
-<header><a href="#" class="brand">🗝️ chris 华语迷宫大冒险 <small>PUMPKIN PARTY</small></a><button id="guide">怎么玩？</button></header>
+<header><a href="#" class="brand">🗝️ chris 华语迷宫大冒险 <small>PUMPKIN PARTY</small></a><button id="music-toggle" aria-pressed="true" title="背景音乐开关">♫ 音乐：开</button><button id="guide">怎么玩？</button></header>
 <main><section class="intro"><div><span class="eyebrow">听音选词再写字 × 迷宫追逐</span><h1>chris 华语迷宫大冒险</h1><p>南瓜灯亮起来了！听音拿钥匙，勇闯魔法花园。</p></div><div class="course-picker"><button id="configure">⚙ 词组范围与路线</button><span id="bank-info">开局前选择练习范围</span></div></section>
 <div class="layout"><section class="arena"><div class="hud"><span id="hearts">♥ ♥ ♥</span><span id="maze-name" class="maze-badge">南瓜小径</span><span id="status" aria-live="polite">准备开始冒险</span><button id="pause">开始游戏 ▶</button></div><div class="board-wrap"><canvas id="maze" width="900" height="780" aria-label="迷宫：使用方向键、WASD 或下方方向按钮移动"></canvas><div id="overlay"><span class="crest">🎃</span><h2>南瓜派对，准备好了吗？</h2><p>先选词组范围，再去六张循环迷宫里找钥匙！</p><button id="start" class="primary">选择范围，开始冒险 →</button></div></div><div class="arena-bottom"><span><b class="legend-hero">●</b> 蓝衣探险家 &nbsp; <b class="legend-enemy">●</b> 红色机器人 &nbsp; <b class="legend-key">◆</b> 金色钥匙</span><span id="danger">机器人正在等待…</span></div></section>
 <aside><section class="card"><span class="eyebrow">ESCAPE INVENTORY</span><h2>你的钥匙背包</h2><div id="keyring"></div><div class="meter"><i id="progress"></i></div><p id="door-status">还需要 5 把钥匙才能开门</p></section><section class="card controls"><h3>🎃 魔法操作台</h3><p>走到 🗝️ 上，听音选词再写字。<br>写字时追逐会暂停，放心写！</p><label>追逐难度 <select id="difficulty"><option value="900">探险 · 慢慢追</option><option value="560">挑战 · 追得更快</option></select></label><button id="restart" class="wide">↻ 重新挑战</button><div class="dpad"><button data-dx="0" data-dy="-1" aria-label="向上">↑</button><div><button data-dx="-1" data-dy="0" aria-label="向左">←</button><button data-dx="0" data-dy="1" aria-label="向下">↓</button><button data-dx="1" data-dy="0" aria-label="向右">→</button></div></div><p class="keyboard">按住连续走 · 也可用方向键 / WASD</p></section></aside></div></main>
@@ -222,15 +225,69 @@ function route(from,to,map=grid){let q=[[from]],seen=new Set([`${from.x},${from.
 function doorOpen(keys){return keys.size===keySites.length;}
 
 
+// A cheerful original looping tune, synthesized locally without audio downloads.
+function createMusic(){
+ let enabled=true,context=null,master=null,timer=null,step=0,next=0,playing=false;
+ const voices=new Set(),beat=.24;
+ const melody=[72,76,79,76,77,81,79,0,76,79,84,83,81,79,76,0,74,77,81,77,76,79,77,0,74,76,79,76,74,72,72,0];
+ const bass=[48,48,53,53,48,48,55,55,50,50,48,48,55,55,48,48];
+ try{enabled=localStorage.getItem('hanzi-v2-music')!=='off';}catch{}
+ function tone(note,time,duration,volume,type='triangle'){
+  if(!note)return;
+  const oscillator=context.createOscillator(),gain=context.createGain();
+  oscillator.type=type;oscillator.frequency.value=440*2**((note-69)/12);
+  gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(volume,time+.015);gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
+  oscillator.connect(gain);gain.connect(master);voices.add(oscillator);
+  oscillator.onended=()=>{voices.delete(oscillator);oscillator.disconnect();gain.disconnect();};
+  oscillator.start(time);oscillator.stop(time+duration+.02);
+ }
+ function schedule(){
+  if(!context||!playing||!enabled)return;
+  while(next<context.currentTime+.15){
+   tone(melody[step%melody.length],next,beat*.85,.14);
+   if(step%2===0)tone(bass[(step/2)%bass.length],next,beat*1.6,.13,'sine');
+   step++;next+=beat;
+  }
+ }
+ function silence(){
+  if(timer!==null){clearInterval(timer);timer=null;}
+  if(master)master.gain.setValueAtTime(0,context.currentTime);
+  for(const voice of voices){try{voice.stop();}catch{}}voices.clear();
+ }
+ function sync(){
+  if(!context||!enabled||!playing){silence();return;}
+  if(timer!==null)return;
+  master.gain.setValueAtTime(.55,context.currentTime);next=context.currentTime+.03;schedule();timer=setInterval(schedule,80);
+ }
+ function unlock(){
+  if(!enabled)return;
+  try{
+   const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+   if(!context){context=new Audio();master=context.createGain();master.connect(context.destination);}
+   Promise.resolve(context.resume()).then(sync).catch(()=>{});
+  }catch{}
+ }
+ return {
+  get enabled(){return enabled;},
+  setPlaying(value){playing=value;sync();},
+  unlock,
+  toggle(){enabled=!enabled;try{localStorage.setItem('hanzi-v2-music',enabled?'on':'off');}catch{}if(enabled)unlock();sync();return enabled;}
+ };
+}
+
 const $=id=>document.getElementById(id),board=$('maze'),g=board.getContext('2d'),ink=$('ink'),pen=ink.getContext('2d');
 let player={...start},enemy={...enemyStart},keys=new Set(),hearts=3,state='ready',station=-1,invincible=0,lastEnemy=0,lastMove=0,held=null,strokes=[],pointer=null,solved=false;
+const music=createMusic();
+$('music-toggle').onclick=()=>{music.toggle();updateMusicButton();};
+function updateMusicButton(){$('music-toggle').textContent=music.enabled?'♫ 音乐：开':'♫ 音乐：关';$('music-toggle').setAttribute('aria-pressed',String(music.enabled));}
+updateMusicButton();
 let lessons=[],previousRound=[],strokePreview=null,choicePassed=false,characterIndex=0;
 function currentCharacter(){return lessons[station].characters[characterIndex];}
 try{const saved=JSON.parse(localStorage.getItem('hanzi-v2-vocabulary-last-round')||'[]');if(Array.isArray(saved))previousRound=saved.filter(c=>typeof c==='string').map(char=>({char}));}catch{}
 let activeRange={from:'1',to:'10'},selectedMap='random',lastMazeId=null,setupFromResult=false;
 try{const saved=JSON.parse(localStorage.getItem('hanzi-v2-vocabulary-setup')||'null');if(saved&&curriculum.some(c=>c.id===saved.from)&&curriculum.some(c=>c.id===saved.to)&&rangeBank(vocabulary,saved.from,saved.to).length>=5){activeRange={from:saved.from,to:saved.to};selectedMap=saved.map==='random'||mazeLayouts.some(m=>String(m.id)===String(saved.map))?saved.map:'random';}const oldValue=localStorage.getItem('hanzi-v2-vocabulary-last-maze'),old=Number(oldValue);if(oldValue!==null&&Number.isInteger(old)&&mazeLayouts.some(m=>m.id===old))lastMazeId=old;}catch{}
 const cell=60;let particles=[],notice='找到钥匙站，机器人正在追你！';
-function hud(){ $('hearts').textContent=Array.from({length:3},(_,i)=>i<hearts?'♥':'♡').join(' ');$('status').textContent=state==='running'?notice:state==='paused'?'⏸ 已暂停':state==='writing'?(choicePassed?'✎ 写字中 · 追逐已暂停':'🔊 听音选词 · 追逐已暂停'):state==='won'?'成功逃脱！':state==='lost'?'下次一定可以！':'准备开始冒险';$('pause').textContent=state==='running'?'暂停 Ⅱ':state==='paused'?'继续 ▶':state==='ready'?'开始游戏 ▶':'冒险中';$('keyring').innerHTML=keySites.map((_,i)=>`<span class="${keys.has(i)?'got':''}" aria-label="钥匙 ${i+1}${keys.has(i)?' 已获得':' 未获得'}">🗝️</span>`).join('');$('progress').style.width=`${keys.size*20}%`;$('door-status').textContent=doorOpen(keys)?'全部集齐！快去右上角出口！':`还需要 ${5-keys.size} 把钥匙才能开门`;}
+function hud(){music.setPlaying(state==='running'&&!document.hidden); $('hearts').textContent=Array.from({length:3},(_,i)=>i<hearts?'♥':'♡').join(' ');$('status').textContent=state==='running'?notice:state==='paused'?'⏸ 已暂停':state==='writing'?(choicePassed?'✎ 写字中 · 追逐已暂停':'🔊 听音选词 · 追逐已暂停'):state==='won'?'成功逃脱！':state==='lost'?'下次一定可以！':'准备开始冒险';$('pause').textContent=state==='running'?'暂停 Ⅱ':state==='paused'?'继续 ▶':state==='ready'?'开始游戏 ▶':'冒险中';$('keyring').innerHTML=keySites.map((_,i)=>`<span class="${keys.has(i)?'got':''}" aria-label="钥匙 ${i+1}${keys.has(i)?' 已获得':' 未获得'}">🗝️</span>`).join('');$('progress').style.width=`${keys.size*20}%`;$('door-status').textContent=doorOpen(keys)?'全部集齐！快去右上角出口！':`还需要 ${5-keys.size} 把钥匙才能开门`;}
 const scenery=document.createElement('canvas');scenery.width=900;scenery.height=780;
 function rounded(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=2;c.stroke();}}
 function ellipse(c,x,y,rx,ry,fill){c.beginPath();c.ellipse(x,y,rx,ry,0,0,7);c.fillStyle=fill;c.fill();}
@@ -278,8 +335,8 @@ function catchPlayer(t){if(t<invincible)return;hearts--;if(hearts<=0){finish(fal
 function checkPosition(t){if(player.x===enemy.x&&player.y===enemy.y){catchPlayer(t);if(state!=='running')return;}let i=keySites.findIndex(k=>k.x===player.x&&k.y===player.y);if(i>=0&&!keys.has(i)){openWriting(i);return;}if(player.x===exit.x&&player.y===exit.y){if(doorOpen(keys))finish(true);else{notice=`门还锁着！再找 ${5-keys.size} 把钥匙`;hud();}}}
 function move(dx,dy){if(state!=='running')return;let t=performance.now();if(t-lastMove<130)return;lastMove=t;if(walkable(player.x+dx,player.y+dy)){player.x+=dx;player.y+=dy;notice=doorOpen(keys)?'出口已开启！往右上角跑！':'找到钥匙站，写对汉字拿钥匙';checkPosition(t);hud();}}
 function loop(t){if(state==='running'){if(held&&t-lastMove>155)move(...held);let speed=Number($('difficulty').value)-keys.size*40;if(t-lastEnemy>speed){lastEnemy=t;let path=route(enemy,player);if(path.length>1)enemy={...path[1]};if(enemy.x===player.x&&enemy.y===player.y)catchPlayer(t);}}draw(t);requestAnimationFrame(loop);}requestAnimationFrame(loop);
-function begin(){stopPreview();activeRange={from:$('course-from').value,to:$('course-to').value};selectedMap=$('maze-choice').value;lessons=pickRound(rangeBank(vocabulary,activeRange.from,activeRange.to),'all',previousRound);const layout=selectMaze(selectedMap,lastMazeId);lastMazeId=layout.id;buildScenery();$('maze-name').textContent=layout.name;try{localStorage.setItem('hanzi-v2-vocabulary-setup',JSON.stringify({...activeRange,map:selectedMap}));localStorage.setItem('hanzi-v2-vocabulary-last-maze',String(lastMazeId));}catch{}$('setup').close();previousRound=lessons;try{localStorage.setItem('hanzi-v2-vocabulary-last-round',JSON.stringify(lessons.map(l=>l.char)));}catch{}updateCourseLabel();player={...start};enemy={...enemyStart};keys=new Set();hearts=3;state='running';station=-1;held=null;invincible=performance.now()+2500;lastEnemy=performance.now();notice='南瓜灯亮了！找钥匙，躲开机器人';$('overlay').style.display='none';$('result').close();$('writing').close();hud();}
-function pause(){held=null;if(state==='ready')return openSetup();if(state==='running'){state='paused';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='喘口气，迷宫已暂停。';$('overlay').querySelector('p').textContent='准备好后继续冒险。';$('start').textContent='继续逃脱 →';}else if(state==='paused'){state='running';lastEnemy=performance.now();$('overlay').style.display='none';}hud();}
+function begin(){music.unlock();stopPreview();activeRange={from:$('course-from').value,to:$('course-to').value};selectedMap=$('maze-choice').value;lessons=pickRound(rangeBank(vocabulary,activeRange.from,activeRange.to),'all',previousRound);const layout=selectMaze(selectedMap,lastMazeId);lastMazeId=layout.id;buildScenery();$('maze-name').textContent=layout.name;try{localStorage.setItem('hanzi-v2-vocabulary-setup',JSON.stringify({...activeRange,map:selectedMap}));localStorage.setItem('hanzi-v2-vocabulary-last-maze',String(lastMazeId));}catch{}$('setup').close();previousRound=lessons;try{localStorage.setItem('hanzi-v2-vocabulary-last-round',JSON.stringify(lessons.map(l=>l.char)));}catch{}updateCourseLabel();player={...start};enemy={...enemyStart};keys=new Set();hearts=3;state='running';station=-1;held=null;invincible=performance.now()+2500;lastEnemy=performance.now();notice='南瓜灯亮了！找钥匙，躲开机器人';$('overlay').style.display='none';$('result').close();$('writing').close();hud();}
+function pause(){music.unlock();held=null;if(state==='ready')return openSetup();if(state==='running'){state='paused';$('overlay').style.display='flex';$('overlay').querySelector('h2').textContent='喘口气，迷宫已暂停。';$('overlay').querySelector('p').textContent='准备好后继续冒险。';$('start').textContent='继续逃脱 →';}else if(state==='paused'){state='running';lastEnemy=performance.now();$('overlay').style.display='none';}hud();}
 $('start').onclick=()=>state==='paused'?pause():openSetup();$('pause').onclick=pause;$('restart').onclick=openSetup;
 const dirs={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};document.addEventListener('keydown',e=>{if(e.target.matches('select'))return;if(e.target.matches('button,summary')&&e.key===' ')return;let dir=dirs[e.key]||dirs[e.key.toLowerCase()];if(dir&&state==='running'){e.preventDefault();held=dir;move(...dir);}if(e.code==='Space'&&!document.querySelector('dialog[open]')){e.preventDefault();pause();}});document.addEventListener('keyup',e=>{if(dirs[e.key]||dirs[e.key.toLowerCase()])held=null;});document.querySelectorAll('[data-dx]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);held=[+b.dataset.dx,+b.dataset.dy];move(...held);};b.onpointerup=b.onpointercancel=()=>held=null;});window.addEventListener('blur',()=>{held=null;if(state==='running')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='running')pause();});
 function speak(){if(!('speechSynthesis'in window)){ $('audio').textContent='设备不支持语音，请换用支持中文朗读的浏览器或设备。';return;}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(lessons[station].word);u.lang='zh-CN';u.rate=.7;let v=speechSynthesis.getVoices().find(v=>/^zh/.test(v.lang));if(v)u.voice=v;u.onend=()=>$('audio').textContent='听清楚了吗？可以再听一次。';u.onerror=()=>$('audio').textContent='声音不可用，请点击重听，并检查设备音量与中文语音。';$('audio').textContent='🔊 仔细听一听…';speechSynthesis.speak(u);}
@@ -309,5 +366,8 @@ $('course-from').onchange=()=>rangeSummary('from');$('course-to').onchange=()=>r
 $('stroke-demo').onclick=()=>{if(station<0||!choicePassed||solved)return;if(strokePreview!==null){stopPreview();paint();return;}$('ghost').textContent='';paint();const model=currentCharacter();let step=0;$('stroke-demo').textContent='Ⅱ 停止示范';function show(){paint();pen.lineWidth=10;pen.strokeStyle='#dd9169';for(let i=0;i<step;i++){pen.beginPath();model.strokes[i].forEach(([x,y],j)=>j?pen.lineTo(x,y):pen.moveTo(x,y));pen.stroke();}const first=model.strokes[step-1]?.[0];if(first){pen.fillStyle='#c87952';pen.font='bold 16px GameFounderKai, KaiTi, STKaiti, serif';pen.fillText(step,first[0]-12,first[1]-7);}$('feedback').textContent=`「${model.char}」第 ${step} / ${model.strokes.length} 笔；跟着笔顺慢慢写。`;}
 step=1;show();strokePreview=setInterval(()=>{step++;if(step>model.strokes.length){stopPreview();$('feedback').textContent=`「${model.char}」共 ${model.strokes.length} 笔。动笔时示范会消失，试着自己写！`;return;}show();},650);};
 
+
+// Redraw canvas labels once the supplied Kai font has loaded.
+if(document.fonts)document.fonts.load("12px GameFounderKai").then(()=>buildScenery()).catch(()=>{});
 </script></body></html>
 

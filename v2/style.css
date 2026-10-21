@@ -94,3 +94,6 @@ body{background-color:#f6dcc9}.brand{background:linear-gradient(#ffe8aa,#ffc88e)
 
 /* Listening gate: writing stays hidden until the correct choice. */
 [hidden]{display:none!important}#choices{display:none;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}#choices button{font-size:26px;min-height:64px}#choices button.incorrect{border-color:#c66960}#writing.choosing #choices{display:grid;grid-column:1/-1}#writing.choosing .paper,#writing.choosing .tools,#writing.choosing #submit,#writing.choosing details{display:none!important}#writing.choosing #leave{display:none}#writing.choosing{max-width:520px}#writing.choosing[open]{display:block}
+
+/* Use the supplied Founder Kai for every interface element and answer option. */
+*,*::before,*::after{font-family:var(--game-font)!important}#music-toggle{white-space:nowrap;font-size:13px;margin-left:auto}header .brand{min-width:0}header .brand small{display:none}@media(max-width:760px){header{gap:6px}.brand{font-size:14px;padding:7px 8px}header>button{font-size:10px;padding:6px 7px}#music-toggle{font-size:10px}}
