@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node server.cjs",
-    "start": "node server.cjs",
+    "dev": "node v2/server.cjs",
+    "start": "node v2/server.cjs",
     "test": "node --test",
-    "build": "npm run generate:bank && node build-standalone.cjs",
-    "generate:bank": "node scripts/generate-word-bank.mjs"
+    "build": "npm run generate:bank && node v2/build-standalone.cjs",
+    "generate:bank": "node v2/scripts/generate-word-bank.mjs"
   },
   "type": "module",
   "devDependencies": {

@@ -1,3 +1,5 @@
 # Preserve upstream license texts verbatim, including their original trailing spaces.
 licenses/* whitespace=-blank-at-eol
 docs/licenses/* whitespace=-blank-at-eol
+v2/licenses/* whitespace=-blank-at-eol
+docs/v2/licenses/* whitespace=-blank-at-eol
