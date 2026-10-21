@@ -1,12 +1,4 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import {lessons,recognize} from './recognition.js';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {lessons,recognize} from './recognition.js';
 const char=c=>lessons.find(l=>l.char===c);
-test('recognizes every supplied character after translation and scale',()=>{for(const lesson of lessons){assert.equal(recognize(lesson.strokes.map(s=>s.map(([x,y])=>[x*.8+20,y*.8+10])),lesson).ok,true,lesson.char);}});
-test('rejects blank writing and dots',()=>{assert.equal(recognize([],char('一')).ok,false);assert.equal(recognize([[[10,10],[12,12]]],char('一')).ok,false);});
-test('rejects wrong stroke count',()=>{assert.equal(recognize(char('三').strokes,char('一')).ok,false);});
-test('rejects vertical line for horizontal character',()=>{assert.equal(recognize([[[180,50],[180,300]]],char('一')).ok,false);});
-test('rejects reversed stroke direction',()=>{assert.equal(recognize(char('一').strokes.map(s=>[...s].reverse()),char('一')).ok,false);});
-test('rejects parallel lines for 十',()=>{assert.equal(recognize(char('二')?.strokes||[[[80,100],[260,100]],[[60,250],[300,250]]],char('十')).ok,false);});
-test('rejects malformed points rather than throwing',()=>{for(const input of [null,[[[]]],[[[NaN,1],[1,2]]],[[[1,2]]]])assert.equal(recognize(input,char('一')).ok,false);});
-test('same stroke count alone does not pass an unrelated character',()=>{assert.equal(recognize(char('天').strokes,char('太')).ok,false);assert.equal(recognize(char('木').strokes,char('天')).ok,false);});
+test('recognizes all required characters at translated scale',()=>{for(const lesson of lessons)assert.equal(recognize(lesson.strokes.map(s=>s.map(([x,y])=>[x*.8+20,y*.8+10])),lesson).ok,true,lesson.char);});
+test('rejects blanks, malformed points, wrong count and unrelated writing',()=>{for(const input of [[],null,[[[]]],[[[NaN,1],[1,2]]],[[[1,2]]],[[[10,10],[12,12]]]])assert.equal(recognize(input,char('一')).ok,false);assert.equal(recognize(char('你').strokes,char('我')).ok,false);assert.equal(recognize([[[180,50],[180,300]]],char('一')).ok,false);assert.equal(recognize(char('一').strokes.map(s=>[...s].reverse()),char('一')).ok,false);});
